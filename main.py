@@ -2,7 +2,11 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional
 
-app = FastAPI()
+app = FastAPI(
+    title="Task API",
+    description="A simple CRUD API for managing tasks.",
+    version="1.0.0"
+)
 
 class TaskCreate(BaseModel):
     title: str
@@ -26,11 +30,19 @@ async def root():
 async def health():
     return {"status": "ok"}
 
-@app.get("/tasks")
+@app.get(
+    "/tasks",
+    summary="Get all tasks",
+    description="Returns a list of all tasks."
+)
 async def show_tasks():
     return tasks
 
-@app.get("/tasks/{task_id}")
+@app.get(
+    "/tasks/{task_id}",
+    summary="Get task by ID",
+    description="Returns a single task if it exists."
+)
 async def get_task(task_id: int):
     for task in tasks:
         if task_id == task["id"]:
@@ -41,7 +53,12 @@ async def get_task(task_id: int):
     )
 
 # POST ENDPOINT
-@app.post("/tasks", status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/tasks",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new task",
+    description="Creates a new task with the provided title."
+)
 async def create_task(task: TaskCreate):
     new_task = {
         "id": len(tasks) + 1,
@@ -51,21 +68,22 @@ async def create_task(task: TaskCreate):
     tasks.append(new_task)
     return new_task
 
-# PUT ENDPOINT
 
-@app.put("/tasks/{task_id}")
+@app.put(
+    "/tasks/{task_id}",
+    summary="Update a task",
+    description="Updates the title, completion status, or both for an existing task."
+)
 async def update_task(task_id: int, updated: TaskUpdate):
     for task in tasks:
         if task["id"] == task_id:
 
-            # Validate empty body
             if updated.title is None and updated.done is None:
                 raise HTTPException(
                     status_code=400,
                     detail="Request body cannot be empty"
                 )
 
-            # Update fields if provided
             if updated.title is not None:
                 if not updated.title.strip():
                     raise HTTPException(
@@ -85,8 +103,12 @@ async def update_task(task_id: int, updated: TaskUpdate):
     )
 
 
-# DElETE ENDPOINT
-@app.delete("/tasks/{task_id}", status_code=204)
+@app.delete(
+    "/tasks/{task_id}",
+    status_code=204,
+    summary="Delete a task",
+    description="Deletes a task by its ID."
+)
 async def delete_task(task_id: int):
     for i, task in enumerate(tasks):
         if task["id"] == task_id:
