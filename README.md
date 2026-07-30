@@ -112,18 +112,9 @@ content-length: 171
 
 ## Swagger Documentation
 
-Insert your Swagger UI screenshot here.
+![alt text](image.png)
 
-Example:
-
-```
-docs/swagger.png
-```
-
-```markdown
-![Swagger UI](docs/swagger.png)
-```
-
+![alt text](image-1.png)
 ## Technologies Used
 
 * Python
