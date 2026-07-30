@@ -5,12 +5,35 @@ class TaskService:
     def __init__(self, repository: TaskRepository):
         self.repository = repository
 
-    def get_all_tasks(self):
-        return self.repository.get_all()
+    def get_all_tasks(
+        self,
+        done: bool | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        offset: int = 0
+    ):
+        return self.repository.get_all(
+            done=done,
+            search=search,
+            limit=limit,
+            offset=offset
+        )
 
     def get_task(self, task_id: int):
         return self.repository.get_by_id(task_id)
 
+    def get_stats(self):
+        tasks = self.repository.get_all()
+
+        total = len(tasks)
+        done = sum(task["done"] for task in tasks)
+
+        return {
+            "total": total,
+            "done": done,
+            "open": total - done
+        }
+    
     def create_task(self, task: TaskCreate):
         if not task.title.strip():
             raise ValueError("Title cannot be empty")

@@ -6,8 +6,31 @@ class TaskRepository:
             {"id": 3, "title": "Go to the gym", "done": False},
         ]
 
-    def get_all(self):
-        return self.tasks
+    def get_all(
+        self,
+        done: bool | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        offset: int = 0
+    ):
+        tasks = self.tasks
+
+        if done is not None:
+            tasks = [
+                task for task in tasks
+                if task["done"] == done
+            ]
+
+        if search:
+            tasks = [
+                task for task in tasks
+                if search.lower() in task["title"].lower()
+            ]
+
+        if limit is not None:
+            return tasks[offset:offset + limit]
+
+        return tasks[offset:]
 
     def get_by_id(self, task_id: int):
         for task in self.tasks:

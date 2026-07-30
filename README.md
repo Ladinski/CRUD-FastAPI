@@ -4,12 +4,16 @@ A simple CRUD Task Management API built with **FastAPI**. This project implement
 
 ## Features
 
-* Create tasks
-* Retrieve all tasks
-* Retrieve a task by ID
-* Update existing tasks
-* Delete tasks
-* Interactive Swagger documentation
+- Create tasks
+- Retrieve all tasks
+- Retrieve a task by ID
+- Update existing tasks
+- Delete tasks
+- Filter tasks by completion status
+- Search tasks by title
+- Pagination using `limit` and `offset`
+- Task statistics endpoint
+- Interactive Swagger documentation
 
 ## Requirements
 
@@ -75,6 +79,20 @@ Open your browser:
 | POST   | `/tasks`           | Creates a new task            |
 | PUT    | `/tasks/{task_id}` | Updates an existing task      |
 | DELETE | `/tasks/{task_id}` | Deletes a task                |
+
+## Pagination
+
+The `GET /tasks` endpoint supports pagination using the `limit` and `offset` query parameters.
+
+Example:
+
+```bash
+GET /tasks?limit=2&offset=2
+```
+
+This request skips the first two tasks and returns the next two.
+
+Real-world APIs typically do not return every record at once because datasets can become very large. Pagination improves performance, reduces bandwidth usage, lowers memory consumption, and provides faster response times for clients.
 
 ## Example curl Output
 

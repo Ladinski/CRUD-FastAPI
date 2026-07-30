@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query, status
+
 from app.repositories.repository import TaskRepository
 from app.schemas.schema import TaskCreate, TaskUpdate
 from app.services.service import TaskService
@@ -15,10 +18,29 @@ service = TaskService(repository)
 @router.get(
     "",
     summary="Get all tasks",
-    description="Returns a list of all tasks."
+    description="Returns tasks with optional filtering, searching, and pagination."
 )
-async def show_tasks():
-    return service.get_all_tasks()
+async def show_tasks(
+    done: Optional[bool] = None,
+    search: Optional[str] = None,
+    limit: Optional[int] = Query(default=None, ge=1),
+    offset: int = Query(default=0, ge=0)
+):
+    return service.get_all_tasks(
+        done=done,
+        search=search,
+        limit=limit,
+        offset=offset
+    )
+
+
+@router.get(
+    "/stats",
+    summary="Task statistics",
+    description="Returns the total, completed, and open task counts."
+)
+async def task_stats():
+    return service.get_stats()
 
 
 @router.get(
