@@ -1,7 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
 
 app = FastAPI()
 
+class TaskCreate(BaseModel):
+    title: str
+    
+
+    
 tasks = [
     {"id": 1, "title": "Update to do list", "done": True},
     {"id": 2, "title": "Setup Flyrank profile", "done": True},
@@ -13,11 +19,11 @@ async def root():
     return {"name": "Task API", "version": "1.0", "endpoints": ["/tasks"] }
 
 @app.get("/health")
-async def status():
+async def health():
     return {"status": "ok"}
 
 @app.get("/tasks")
-async def status():
+async def show_tasks():
     return tasks
 
 @app.get("/tasks/{task_id}")
@@ -29,3 +35,13 @@ async def get_task(task_id: int):
         status_code=404,
         detail=f"Task {task_id} not found"
     )
+
+@app.post("/tasks", status_code=status.HTTP_201_CREATED)
+async def create_task(task: TaskCreate):
+    new_task = {
+        "id": len(tasks) + 1,
+        "title": task.title,
+        "done": False
+    }
+    tasks.append(new_task)
+    return new_task
