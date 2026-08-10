@@ -1,13 +1,53 @@
-from app.database.database import get_connection
+import os
+import psycopg
+
+from pathlib import Path
+from dotenv import load_dotenv
+from app.database.database import get_connection as get_sqlite_connection
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+load_dotenv(BASE_DIR / ".env")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 class TaskRepository:
     def __init__(self):
-        self.tasks = [
-            {"id": 1, "title": "Update to do list", "done": True},
-            {"id": 2, "title": "Setup Flyrank profile", "done": True},
-            {"id": 3, "title": "Go to the gym", "done": False},
-        ]
+        self.initialize_postgres()
+
+    def get_postgres_connection(self):
+        return psycopg.connect(DATABASE_URL)
+
+    def initialize_postgres(self):
+        connection = self.get_postgres_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                done BOOLEAN NOT NULL DEFAULT FALSE
+            )
+        """)
+
+        cursor.execute("SELECT COUNT(*) FROM tasks")
+        task_count = cursor.fetchone()[0]
+
+        if task_count == 0:
+            cursor.executemany(
+                "INSERT INTO tasks (title, done) VALUES (%s, %s)",
+                [
+                    ("Update to do list", True),
+                    ("Setup Flyrank profile", True),
+                    ("Go to the gym", False),
+                ]
+            )
+
+        connection.commit()
+        cursor.close()
+        connection.close()
 
     def get_all(
         self,
@@ -16,7 +56,7 @@ class TaskRepository:
         limit: int | None = None,
         offset: int = 0
     ):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         query = "SELECT id, title, done FROM tasks"
@@ -56,7 +96,7 @@ class TaskRepository:
         ]
 
     def get_by_id(self, task_id: int):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         cursor.execute(
@@ -77,7 +117,7 @@ class TaskRepository:
         }
 
     def create(self, title: str):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         cursor.execute(
@@ -109,7 +149,7 @@ class TaskRepository:
         title: str | None,
         done: bool | None
     ):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         cursor.execute(
@@ -139,7 +179,7 @@ class TaskRepository:
         return self.get_by_id(task_id)
 
     def delete(self, task_id: int):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         cursor.execute(
@@ -156,7 +196,7 @@ class TaskRepository:
         return deleted
 
     def get_stats(self):
-        connection = get_connection()
+        connection = get_sqlite_connection()
         cursor = connection.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM tasks")
