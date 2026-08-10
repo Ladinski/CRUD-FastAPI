@@ -67,6 +67,45 @@ Open your browser:
 * API: http://127.0.0.1:8000
 * Swagger UI: http://127.0.0.1:8000/docs
 
+## Database
+
+This project uses SQLite for persistent task storage. SQLite was chosen because it is lightweight, requires no separate database server, and stores the entire database in a single file, making it suitable for a small CRUD API.
+
+The database is stored in:
+
+```text
+tasks.db
+```
+
+The database and `tasks` table are created automatically when the application starts if they do not already exist. If the table is empty, the application also inserts three example tasks.
+
+Unlike the previous in-memory implementation, tasks stored in SQLite remain available after the FastAPI server is restarted.
+
+### Database Schema
+
+The `tasks` table contains:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `id` | INTEGER | Primary key and unique task ID |
+| `title` | TEXT | Task title |
+| `done` | BOOLEAN | Whether the task is completed |
+
+### Example SQL Query
+
+One query I executed manually using DB Browser for SQLite was:
+
+```sql
+SELECT * FROM tasks WHERE done = 1;
+```
+
+This returns only completed tasks.
+
+I also verified that changes made directly to the SQLite database were immediately reflected by the API through `GET /tasks`.
+
+### Database Viewer
+
+![SQLite database viewed in DB Browser for SQLite](SQL.png)
 
 ## API Endpoints
 
