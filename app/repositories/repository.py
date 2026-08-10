@@ -120,80 +120,74 @@ class TaskRepository:
         }
 
     def create(self, title: str):
-        connection = get_sqlite_connection()
+        connection = self.get_postgres_connection()
         cursor = connection.cursor()
 
         cursor.execute(
-            "INSERT INTO tasks (title, done) VALUES (?, ?)",
+            """
+            INSERT INTO tasks (title, done)
+            VALUES (%s, %s)
+            RETURNING id, title, done
+            """,
             (title, False)
         )
 
-        connection.commit()
-
-        task_id = cursor.lastrowid
-
-        cursor.execute(
-            "SELECT id, title, done FROM tasks WHERE id = ?",
-            (task_id,)
-        )
-
         row = cursor.fetchone()
+
+        connection.commit()
+        cursor.close()
         connection.close()
 
         return {
-            "id": row["id"],
-            "title": row["title"],
-            "done": bool(row["done"])
+            "id": row[0],
+            "title": row[1],
+            "done": row[2]
         }
-
     def update(
         self,
         task_id: int,
         title: str | None,
         done: bool | None
     ):
-        connection = get_sqlite_connection()
-        cursor = connection.cursor()
+        existing_task = self.get_by_id(task_id)
 
-        cursor.execute(
-            "SELECT id FROM tasks WHERE id = ?",
-            (task_id,)
-        )
-
-        if cursor.fetchone() is None:
-            connection.close()
+        if existing_task is None:
             return None
+
+        connection = self.get_postgres_connection()
+        cursor = connection.cursor()
 
         if title is not None:
             cursor.execute(
-                "UPDATE tasks SET title = ? WHERE id = ?",
+                "UPDATE tasks SET title = %s WHERE id = %s",
                 (title, task_id)
             )
 
         if done is not None:
             cursor.execute(
-                "UPDATE tasks SET done = ? WHERE id = ?",
+                "UPDATE tasks SET done = %s WHERE id = %s",
                 (done, task_id)
             )
 
         connection.commit()
+        cursor.close()
         connection.close()
 
         return self.get_by_id(task_id)
 
     def delete(self, task_id: int):
-        connection = get_sqlite_connection()
+        connection = self.get_postgres_connection()
         cursor = connection.cursor()
 
         cursor.execute(
-            "DELETE FROM tasks WHERE id = ?",
+            "DELETE FROM tasks WHERE id = %s",
             (task_id,)
         )
 
-        connection.commit()
-
         deleted = cursor.rowcount > 0
 
+        connection.commit()
+        cursor.close()
         connection.close()
 
         return deleted
