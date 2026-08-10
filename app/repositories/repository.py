@@ -1,3 +1,6 @@
+from app.database.database import get_connection
+
+
 class TaskRepository:
     def __init__(self):
         self.tasks = [
@@ -13,31 +16,45 @@ class TaskRepository:
         limit: int | None = None,
         offset: int = 0
     ):
-        tasks = self.tasks
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        if done is not None:
-            tasks = [
-                task for task in tasks
-                if task["done"] == done
-            ]
+        cursor.execute(
+            "SELECT id, title, done FROM tasks"
+        )
 
-        if search:
-            tasks = [
-                task for task in tasks
-                if search.lower() in task["title"].lower()
-            ]
+        rows = cursor.fetchall()
+        connection.close()
 
-        if limit is not None:
-            return tasks[offset:offset + limit]
-
-        return tasks[offset:]
+        return [
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "done": bool(row["done"])
+            }
+            for row in rows
+        ]
 
     def get_by_id(self, task_id: int):
-        for task in self.tasks:
-            if task["id"] == task_id:
-                return task
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        return None
+        cursor.execute(
+            "SELECT id, title, done FROM tasks WHERE id = ?",
+            (task_id,)
+        )
+
+        row = cursor.fetchone()
+        connection.close()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"])
+        }
 
     def create(self, title: str):
         new_id = max(
@@ -60,7 +77,12 @@ class TaskRepository:
         title: str | None,
         done: bool | None
     ):
-        task = self.get_by_id(task_id)
+        task = None
+
+        for existing_task in self.tasks:
+            if existing_task["id"] == task_id:
+                task = existing_task
+                break
 
         if task is None:
             return None
