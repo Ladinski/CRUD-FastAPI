@@ -56,7 +56,7 @@ class TaskRepository:
         limit: int | None = None,
         offset: int = 0
     ):
-        connection = get_sqlite_connection()
+        connection = self.get_postgres_connection()
         cursor = connection.cursor()
 
         query = "SELECT id, title, done FROM tasks"
@@ -64,11 +64,11 @@ class TaskRepository:
         params = []
 
         if done is not None:
-            conditions.append("done = ?")
+            conditions.append("done = %s")
             params.append(done)
 
         if search:
-            conditions.append("title LIKE ?")
+            conditions.append("title ILIKE %s")
             params.append(f"%{search}%")
 
         if conditions:
@@ -77,43 +77,46 @@ class TaskRepository:
         query += " ORDER BY title ASC"
 
         if limit is not None:
-            query += " LIMIT ? OFFSET ?"
+            query += " LIMIT %s OFFSET %s"
             params.append(limit)
             params.append(offset)
 
         cursor.execute(query, params)
         rows = cursor.fetchall()
 
+        cursor.close()
         connection.close()
 
         return [
             {
-                "id": row["id"],
-                "title": row["title"],
-                "done": bool(row["done"])
+                "id": row[0],
+                "title": row[1],
+                "done": row[2]
             }
             for row in rows
         ]
 
     def get_by_id(self, task_id: int):
-        connection = get_sqlite_connection()
+        connection = self.get_postgres_connection()
         cursor = connection.cursor()
 
         cursor.execute(
-            "SELECT id, title, done FROM tasks WHERE id = ?",
+            "SELECT id, title, done FROM tasks WHERE id = %s",
             (task_id,)
         )
 
         row = cursor.fetchone()
+
+        cursor.close()
         connection.close()
 
         if row is None:
             return None
 
         return {
-            "id": row["id"],
-            "title": row["title"],
-            "done": bool(row["done"])
+            "id": row[0],
+            "title": row[1],
+            "done": row[2]
         }
 
     def create(self, title: str):
