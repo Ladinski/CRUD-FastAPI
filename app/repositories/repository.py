@@ -19,11 +19,31 @@ class TaskRepository:
         connection = get_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT id, title, done FROM tasks"
-        )
+        query = "SELECT id, title, done FROM tasks"
+        conditions = []
+        params = []
 
+        if done is not None:
+            conditions.append("done = ?")
+            params.append(done)
+
+        if search:
+            conditions.append("title LIKE ?")
+            params.append(f"%{search}%")
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY title ASC"
+
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.append(limit)
+            params.append(offset)
+
+        cursor.execute(query, params)
         rows = cursor.fetchall()
+
         connection.close()
 
         return [
@@ -134,3 +154,21 @@ class TaskRepository:
         connection.close()
 
         return deleted
+
+    def get_stats(self):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT COUNT(*) FROM tasks")
+        total = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
+        done = cursor.fetchone()[0]
+
+        connection.close()
+
+        return {
+            "total": total,
+            "done": done,
+            "open": total - done
+        }

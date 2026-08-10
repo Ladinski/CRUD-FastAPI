@@ -21,18 +21,9 @@ class TaskService:
 
     def get_task(self, task_id: int):
         return self.repository.get_by_id(task_id)
-
+    
     def get_stats(self):
-        tasks = self.repository.get_all()
-
-        total = len(tasks)
-        done = sum(task["done"] for task in tasks)
-
-        return {
-            "total": total,
-            "done": done,
-            "open": total - done
-        }
+        return self.repository.get_stats()
     
     def create_task(self, task: TaskCreate):
         if not task.title.strip():

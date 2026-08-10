@@ -4,17 +4,16 @@ A simple CRUD Task Management API built with **FastAPI**. This project implement
 
 ## Features
 
-- Create tasks
-- Retrieve all tasks
-- Retrieve a task by ID
-- Update existing tasks
-- Delete tasks
-- Filter tasks by completion status
-- Search tasks by title
-- Pagination using `limit` and `offset`
-- Task statistics endpoint
+- Create, retrieve, update, and delete tasks
+- Persistent task storage using SQLite
+- Automatic database and table creation
+- Automatic seeding of example tasks when the database is empty
+- Filter tasks by completion status using SQL `WHERE`
+- Search tasks by title using SQL `LIKE`
+- Pagination using SQL `LIMIT` and `OFFSET`
+- Alphabetical task sorting using SQL `ORDER BY`
+- Task statistics using SQL `COUNT()`
 - Interactive Swagger documentation
-
 ## Requirements
 
 * Python 3.10+
