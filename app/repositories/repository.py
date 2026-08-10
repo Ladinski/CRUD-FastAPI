@@ -89,28 +89,48 @@ class TaskRepository:
         title: str | None,
         done: bool | None
     ):
-        task = None
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        for existing_task in self.tasks:
-            if existing_task["id"] == task_id:
-                task = existing_task
-                break
+        cursor.execute(
+            "SELECT id FROM tasks WHERE id = ?",
+            (task_id,)
+        )
 
-        if task is None:
+        if cursor.fetchone() is None:
+            connection.close()
             return None
 
         if title is not None:
-            task["title"] = title
+            cursor.execute(
+                "UPDATE tasks SET title = ? WHERE id = ?",
+                (title, task_id)
+            )
 
         if done is not None:
-            task["done"] = done
+            cursor.execute(
+                "UPDATE tasks SET done = ? WHERE id = ?",
+                (done, task_id)
+            )
 
-        return task
+        connection.commit()
+        connection.close()
+
+        return self.get_by_id(task_id)
 
     def delete(self, task_id: int):
-        for index, task in enumerate(self.tasks):
-            if task["id"] == task_id:
-                self.tasks.pop(index)
-                return True
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        return False
+        cursor.execute(
+            "DELETE FROM tasks WHERE id = ?",
+            (task_id,)
+        )
+
+        connection.commit()
+
+        deleted = cursor.rowcount > 0
+
+        connection.close()
+
+        return deleted
