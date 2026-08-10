@@ -57,19 +57,31 @@ class TaskRepository:
         }
 
     def create(self, title: str):
-        new_id = max(
-            (task["id"] for task in self.tasks),
-            default=0
-        ) + 1
+        connection = get_connection()
+        cursor = connection.cursor()
 
-        new_task = {
-            "id": new_id,
-            "title": title,
-            "done": False
+        cursor.execute(
+            "INSERT INTO tasks (title, done) VALUES (?, ?)",
+            (title, False)
+        )
+
+        connection.commit()
+
+        task_id = cursor.lastrowid
+
+        cursor.execute(
+            "SELECT id, title, done FROM tasks WHERE id = ?",
+            (task_id,)
+        )
+
+        row = cursor.fetchone()
+        connection.close()
+
+        return {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"])
         }
-
-        self.tasks.append(new_task)
-        return new_task
 
     def update(
         self,
