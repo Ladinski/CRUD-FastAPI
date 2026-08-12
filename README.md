@@ -113,6 +113,30 @@ To stop the stack:
 ```bash
 docker compose down
 ```
+## Authentication
+
+This API uses Supabase Auth for user authentication.
+
+Users can:
+
+- Sign up
+- Log in
+- Receive JWT access and refresh tokens
+- Access protected routes using a Bearer token
+- Log out
+
+Protected routes verify the access token through Supabase before returning private data.
+
+## Environment Variables
+
+Create a `.env` file in the project root based on `.env.example`.
+
+Required variables:
+
+```env
+DATABASE_URL=postgres://postgres:YOUR_PASSWORD@localhost:5432/tasks
+SUPABASE_URL=YOUR_SUPABASE_URL
+SUPABASE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 
 ## PostgreSQL Database
 
