@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Header, HTTPException, status
 from app.auth.supabase_client import supabase
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from app.auth.dependencies import get_current_user
+
 
 router = APIRouter(tags=["Protected"])
 
@@ -21,48 +23,50 @@ async def public_info():
     description="Returns the authenticated user's profile."
 )
 async def protected_profile(
-    authorization: str | None = Header(default=None)
+    auth=Depends(get_current_user)
 ):
-    if not authorization:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Access token required"
-        )
+    user = auth["user"]
 
-    parts = authorization.split(" ", 1)
+    return {
+        "id": user.id,
+        "email": user.email,
+        "created_at": user.created_at
+    }
 
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Access token required"
-        )
 
-    token = parts[1].strip()
+@router.get(
+    "/protected/dashboard",
+    summary="Protected dashboard",
+    description="Returns protected dashboard information."
+)
+async def protected_dashboard(
+    auth=Depends(get_current_user)
+):
+    user = auth["user"]
 
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Access token required"
-        )
+    return {
+        "message": "Welcome to the protected dashboard",
+        "user_id": user.id
+    }
 
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Log out",
+    description="Logs out the authenticated user."
+)
+async def logout(
+    auth=Depends(get_current_user)
+):
     try:
-        response = supabase.auth.get_user(token)
-        user = response.user
+        supabase.auth.sign_out()
 
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
-
-        return {
-            "id": user.id,
-            "email": user.email,
-            "created_at": user.created_at
-        }
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT
+        )
 
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
+            detail="Logout failed"
         )
