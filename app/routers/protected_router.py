@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Header, HTTPException, status
-
+from app.auth.supabase_client import supabase
 
 router = APIRouter(tags=["Protected"])
 
@@ -18,7 +18,7 @@ async def public_info():
 @router.get(
     "/protected/profile",
     summary="Protected profile",
-    description="Requires a Bearer access token in the Authorization header."
+    description="Returns the authenticated user's profile."
 )
 async def protected_profile(
     authorization: str | None = Header(default=None)
@@ -29,13 +29,15 @@ async def protected_profile(
             detail="Access token required"
         )
 
-    if not authorization.startswith("Bearer "):
+    parts = authorization.split(" ", 1)
+
+    if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Access token required"
         )
 
-    token = authorization.removeprefix("Bearer ").strip()
+    token = parts[1].strip()
 
     if not token:
         raise HTTPException(
@@ -43,7 +45,24 @@ async def protected_profile(
             detail="Access token required"
         )
 
-    return {
-        "message": "Token received",
-        "token": token
-    }
+    try:
+        response = supabase.auth.get_user(token)
+        user = response.user
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token"
+            )
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "created_at": user.created_at
+        }
+
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
