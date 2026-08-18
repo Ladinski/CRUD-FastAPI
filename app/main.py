@@ -4,6 +4,7 @@ from app.database.database import initialize_database
 from app.auth.supabase_client import supabase
 from app.routers.auth_router import router as auth_router
 from app.routers.protected_router import router as protected_router
+from app.routers.llm_router import router as llm_router
 
 app = FastAPI(
     title="Task API",
@@ -18,6 +19,7 @@ initialize_database()
 app.include_router(task_router)
 app.include_router(auth_router)
 app.include_router(protected_router)
+app.include_router(llm_router)
 
 @app.get("/")
 async def root():
