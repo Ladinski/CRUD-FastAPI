@@ -1,0 +1,42 @@
+[
+  {
+    "text": "Finish my FastAPI assignment tonight",
+    "expected_category": "study",
+    "expected_priority": "high"
+  },
+  {
+    "text": "Prepare slides for the client meeting tomorrow",
+    "expected_category": "work",
+    "expected_priority": "high"
+  },
+  {
+    "text": "Buy groceries this weekend",
+    "expected_category": "personal",
+    "expected_priority": "low"
+  },
+  {
+    "text": "Review database notes before class",
+    "expected_category": "study",
+    "expected_priority": "medium"
+  },
+  {
+    "text": "Reply to my manager about the project update",
+    "expected_category": "work",
+    "expected_priority": "medium"
+  },
+  {
+    "text": "Book a dentist appointment",
+    "expected_category": "personal",
+    "expected_priority": "medium"
+  },
+  {
+    "text": "Handle that thing sometime",
+    "expected_category": "other",
+    "expected_priority": "low"
+  },
+  {
+    "text": "Figure out what I should do next",
+    "expected_category": "other",
+    "expected_priority": "low"
+  }
+]

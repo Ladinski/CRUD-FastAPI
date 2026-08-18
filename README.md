@@ -113,6 +113,40 @@ To stop the stack:
 ```bash
 docker compose down
 ```
+
+## Eval Results
+
+Prompt version: `task-analyze-v1`
+
+Date: `2026-08-18`
+
+Result: `4/8` correct (`50.0%`)
+
+Failed cases:
+- "Finish my FastAPI assignment tonight" was classified as `work` instead of `study`.
+- "Prepare slides for the client meeting tomorrow" was given `medium` priority instead of `high`.
+- "Buy groceries this weekend" was given `medium` priority instead of `low`.
+- "Review database notes before class" was classified as `work` instead of `study`.
+
+This gives me a baseline for future prompt changes. The main weakness is distinguishing `study` from `work` and applying consistent priority rules.
+
+## Cost / Usage Example
+
+The project currently uses the local Ollama model `gemma3:1b`, so there is no per-request provider charge.
+
+Example model call:
+
+```json
+{
+  "prompt_version": "task-analyze-v1",
+  "model": "gemma3:1b",
+  "input_tokens": 377,
+  "output_tokens": 51,
+  "duration_ms": 1129.7,
+  "repair": false
+}
+
+
 ## Authentication
 
 This API uses Supabase Auth for user authentication.
