@@ -1,11 +1,11 @@
 import os
+import openai
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import ValidationError
 
 from app.llm.schema import TaskAnalyzeInput, TaskAnalyzeOutput
-
 from app.llm.client import analyze_task_with_llm
+
 
 router = APIRouter(
     prefix="/tasks",
@@ -28,8 +28,38 @@ async def analyze_task(data: TaskAnalyzeInput):
             reason="Stub response for development."
         )
 
+    if os.getenv("LLM_ENABLED", "true").lower() == "false":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LLM feature is currently disabled"
+        )
+
     try:
         return analyze_task_with_llm(data.text)
+
+    except openai.APITimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="LLM provider timed out"
+        )
+
+    except openai.RateLimitError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LLM provider rate limit reached"
+        )
+
+    except openai.APIStatusError as error:
+        if error.status_code in (400, 401, 403):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="LLM provider request failed"
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LLM provider unavailable"
+        )
 
     except ValueError:
         raise HTTPException(
