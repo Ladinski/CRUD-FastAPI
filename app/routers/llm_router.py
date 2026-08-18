@@ -28,11 +28,11 @@ async def analyze_task(data: TaskAnalyzeInput):
             reason="Stub response for development."
         )
 
-    result = analyze_task_with_llm(data.text)
+    try:
+        return analyze_task_with_llm(data.text)
 
-    return {
-        "category": "other",
-        "priority": "low",
-        "confidence": 0.0,
-        "reason": result
-    }
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Model could not produce a valid response"
+        )
