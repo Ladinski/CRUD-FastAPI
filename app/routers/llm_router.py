@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.llm.schema import TaskAnalyzeInput, TaskAnalyzeOutput
 
+from app.llm.client import analyze_task_with_llm
 
 router = APIRouter(
     prefix="/tasks",
@@ -27,7 +28,11 @@ async def analyze_task(data: TaskAnalyzeInput):
             reason="Stub response for development."
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="LLM integration not enabled yet"
-    )
+    result = analyze_task_with_llm(data.text)
+
+    return {
+        "category": "other",
+        "priority": "low",
+        "confidence": 0.0,
+        "reason": result
+    }
